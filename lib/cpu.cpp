@@ -3,19 +3,19 @@
 #include <ostream>
 #include <iomanip>
 
-
 #include "../headers/common.hpp"
 #include "../headers/cpu.hpp"
 #include "../headers/bus.hpp"
 #include "../headers/instructions.hpp"
-using namespace std;
 
+using namespace std;
 
 gbCpu::gbCpu(Bus& bus, Instructions& instr, Timer& timer) 
     : bus(bus), instr(instr), timer(timer) {
     regs.pc = 0x100;
     regs.a = regs.b = regs.c = regs.d = regs.e = regs.f = regs.h = regs.l = 0;
 }
+
 void gbCpu::debug(){
     curr_ins = instr.Instruction_by_opcode(opcode);
     cout<<"'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"<<endl;
@@ -67,7 +67,6 @@ void gbCpu::run(){
 }
 
 void gbCpu::fetch(){
-    // cout<<"Reading: "<<regs.pc<<endl;
     opcode = bus.read(regs.pc);
     regs.pc++;
 }
@@ -83,12 +82,10 @@ void gbCpu::decode(){
         case(AM::IMP):{
             break;
         }
-
         case(AM::R):{
             fetched_data = regs.read_reg(curr_ins->reg_1);
             break;
         }
-
         case(AM::R_D16):
         case(AM::D16):{
             u8 lo = bus.read(regs.pc);
@@ -99,12 +96,10 @@ void gbCpu::decode(){
             regs.pc+=2;
             break;
         }
-
         case AM::R_R:{
             fetched_data = regs.read_reg(curr_ins->reg_2);
             break;
         }
-
         case AM::A16_R:{
             // from Reg to memory 16b addr            
             u8 lo = bus.read(regs.pc);
@@ -120,7 +115,7 @@ void gbCpu::decode(){
             break;
         }
         case AM::A8_R:{
-            // from Reg to memory 16b addr            
+            // from Reg to memory 8b addr            
             u8 lo = bus.read(regs.pc);
             timer.emu_cycles(1);
             is_mem_dest= true;
@@ -130,7 +125,6 @@ void gbCpu::decode(){
             fetched_data = regs.read_reg(curr_ins->reg_2);
             break;
         }
-
         case AM::R_A8:
         case AM::D8:
         case AM::HL_SPR:        //doubt
@@ -140,7 +134,6 @@ void gbCpu::decode(){
             regs.pc++;
             break;
         }
-
         case AM::R_MR:{
             u16 addr = regs.read_reg(curr_ins->reg_2);
             if(curr_ins->reg_2 ==  RT::C) addr |= 0xff00;
@@ -148,7 +141,6 @@ void gbCpu::decode(){
             timer.emu_cycles(1);
             break;
         }
-
         case AM::MR_R:{
             fetched_data = regs.read_reg(curr_ins->reg_2);
             mem_dest = regs.read_reg(curr_ins->reg_1);
@@ -158,7 +150,6 @@ void gbCpu::decode(){
             }
             break;
         }
-
         case AM::MR_D8:
             fetched_data = bus.read(regs.pc);
             timer.emu_cycles(1);
@@ -166,7 +157,6 @@ void gbCpu::decode(){
             mem_dest = regs.read_reg(curr_ins->reg_1);
             is_mem_dest= true;
             break;
-
         case AM::MR:{
             fetched_data = bus.read(regs.read_reg(curr_ins->reg_1));
             timer.emu_cycles(1);
@@ -174,7 +164,6 @@ void gbCpu::decode(){
             is_mem_dest= true;
             break;
         }
-
         case(AM::R_A16):{
             u8 lo = bus.read(regs.pc);
             timer.emu_cycles(1);
@@ -185,7 +174,6 @@ void gbCpu::decode(){
             fetched_data = bus.read(addr);
             break;
         }
-
         case AM::R_HLI:{
             fetched_data = bus.read(regs.read_reg(curr_ins->reg_2));
             timer.emu_cycles(1);
@@ -272,6 +260,39 @@ void gbCpu::execute(){
         goto_addr(addr, false);
         break;
     }
+    case IN::RRA:{
+        bool old_0bit = regs.a & 0x01;
+        regs.a = (regs.a >> 1) | regs.read_flag('C') << 7;
+        regs.set_flag(regs.a==0,false,false,old_0bit);
+        break;
+    }
+    case IN::RRCA:{
+        bool old_0bit = regs.a & 0x01;
+        regs.set_flag(false,false,false,old_0bit);
+        regs.a = (regs.a >> 1) | regs.read_flag('C') << 7;
+        regs.set_flag(regs.a==0,false,false,old_0bit);
+        break;
+    case IN::RLA:{
+        bool old_bit7 = (regs.a & 0x80) >> 7;
+        regs.a = (regs.a << 1) |  regs.read_flag('C');
+        regs.set_flag(false,false,false,old_bit7);
+        break;
+        }
+    case IN::RLCA:{
+        bool old_bit7 = (regs.a & 0x80) >> 7;
+        regs.set_flag(false,false,false,old_bit7);
+        regs.a = (regs.a << 1) | regs.read_flag('C');
+        break;
+        }
+    case IN::OR:{
+        if(curr_ins->reg_1 == RT::HL){
+            
+        }
+        u8 result = fetched_data | regs.a;
+
+    }
+    }
+
     default:
         cerr<<"Execute not implmented: "<<inst_name(curr_ins->type)<<" OP: 0X"<<uppercase<<hex<<static_cast<int>(opcode)<<" PC: "<<regs.pc<<endl;
         exit(-3);

@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name and version
-project(GameBoyEmulator VERSION 1.0)
+project(ZenBoyEmulator VERSION 1.0)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -18,6 +18,7 @@ set(SOURCES
     lib/cpu.cpp
     lib/timer.cpp
     lib/instructions.cpp
+    lib/operations.cpp
 )
 
 set(HEADERS

@@ -12,6 +12,7 @@ Instructions::Instructions(){
     table[0x06] = InstructionData{IN::LD, AM::R_D8, RT::B};
     table[0x08] = InstructionData{IN::LD, AM::A16_R, RT::NONE, RT::SP};
     table[0x0A] = InstructionData{IN::LD, AM::R_MR, RT::A, RT::BC};
+    table[0x0F] = InstructionData{IN::RRCA, AM::R, RT::A};
     table[0x0E] = InstructionData{IN::LD, AM::R_D8, RT::C};
 
     table[0x11] = InstructionData{IN::LD, AM::R_D16, RT::DE};
@@ -20,6 +21,7 @@ Instructions::Instructions(){
     table[0x16] = InstructionData{IN::LD, AM::R_D8, RT::D};
     table[0x18] = InstructionData{IN::JR, AM::D8};
     table[0x1A] = InstructionData{IN::LD, AM::R_MR, RT::A, RT::DE};
+    table[0x1F] = InstructionData{IN::RRA, AM::R, RT::A};
     table[0x1E] = InstructionData{IN::LD, AM::R_D8, RT::E};
 
     table[0x20] = InstructionData{IN::JR, AM::D8, .cond = CT::NZ};  
@@ -118,6 +120,8 @@ Instructions::Instructions(){
     table[0x87] = InstructionData{IN::ADD, AM::R_R, RT::A, RT::A};
 
     table[0xAF] = InstructionData{IN::XOR, AM::R, RT::A};
+
+
 
     table[0xC0] = InstructionData{IN::RET, AM::IMP, .cond = CT::NZ}; 
     table[0xC1] = InstructionData{IN::POP, AM::R, RT::BC};

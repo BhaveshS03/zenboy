@@ -17,7 +17,7 @@ Bus::Bus(Cart cart) {
 
 u8 Bus::read(uint16_t address) {
     if (address < GB_MEMORY_SIZE) {
-        return memory.at(address);
+        return memory[address];
     }
     return 0xFF;
 }

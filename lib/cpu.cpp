@@ -272,6 +272,7 @@ void gbCpu::execute(){
         regs.a = (regs.a >> 1) | regs.read_flag('C') << 7;
         regs.set_flag(regs.a==0,false,false,old_0bit);
         break;
+        }
     case IN::RLA:{
         bool old_bit7 = (regs.a & 0x80) >> 7;
         regs.a = (regs.a << 1) |  regs.read_flag('C');
@@ -284,14 +285,14 @@ void gbCpu::execute(){
         regs.a = (regs.a << 1) | regs.read_flag('C');
         break;
         }
-    case IN::OR:{
-        if(curr_ins->reg_1 == RT::HL){
+    // case IN::OR:{
+    //     if(curr_ins->reg_1 == RT::HL){
             
-        }
-        u8 result = fetched_data | regs.a;
+    //     }
+    //     u8 result = fetched_data | regs.a;
 
-    }
-    }
+    // }
+    // }
 
     default:
         cerr<<"Execute not implmented: "<<inst_name(curr_ins->type)<<" OP: 0X"<<uppercase<<hex<<static_cast<int>(opcode)<<" PC: "<<regs.pc<<endl;

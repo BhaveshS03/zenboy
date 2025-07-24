@@ -285,13 +285,15 @@ void gbCpu::execute(){
         regs.a = (regs.a << 1) | regs.read_flag('C');
         break;
         }
-    // case IN::OR:{
-    //     if(curr_ins->reg_1 == RT::HL){
-            
-    //     }
-    //     u8 result = fetched_data | regs.a;
-
-    // }
+    case IN::OR:{
+        if(curr_ins->reg_1 == RT::HL){
+            u8 result = bus.read(regs.read_reg(RT::HL));
+            regs.set_reg(RT::A, result);
+        }
+        u8 result = fetched_data | regs.a;
+        regs.set_reg(RT::A, result);
+        break;
+    }
     // }
 
     default:

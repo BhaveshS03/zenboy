@@ -23,17 +23,44 @@ gbCpu::gbCpu(Bus& bus, Instructions& instr, Timer& timer)
     regs.a = regs.b = regs.c = regs.d = regs.e = regs.f = regs.h = regs.l = 0;
 }
 
-void gbCpu::debug() {
-    curr_ins = instr.Instruction_by_opcode(opcode); // Re-fetch to ensure curr_ins is valid for debug
-    cout << "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''" << endl;
-    cout << "Current opcode: 0x" << uppercase << hex << static_cast<int>(opcode) << " (" << hex << regs.pc - 1 << " " << hex << regs.pc << " " << hex << regs.pc + 1 << ")" << endl;
-    if (curr_ins) {
-        cout << inst_name(curr_ins->type) << endl;
-    } else {
-        cout << "UNKNOWN INSTRUCTION" << endl;
-    }
-    cout << "flags: Z" << regs.read_flag('Z') << " C" << regs.read_flag('C') << " N" << regs.read_flag('N') << " H" << regs.read_flag('H') << endl;
-    cout << "PC: " << regs.pc << " AF: 0x" << hex << regs.read_reg(RT::AF) << " BC: 0x" << hex << regs.read_reg(RT::BC) << " DE: 0x" << hex << regs.read_reg(RT::DE) << " HL: 0x" << hex << regs.read_reg(RT::HL) << " SP: 0x" << hex << regs.read_reg(RT::SP) << endl;
+// void gbCpu::debug() {
+//     curr_ins = instr.Instruction_by_opcode(opcode); // Re-fetch to ensure curr_ins is valid for debug
+//     cout << "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''" << endl;
+//     cout << "Current opcode: 0x" << uppercase << hex << static_cast<int>(opcode) << " (" << hex << regs.pc - 1 << " " << hex << regs.pc << " " << hex << regs.pc + 1 << ")" << endl;
+//     if (curr_ins) {
+//         cout << inst_name(curr_ins->type) << endl;
+//     } else {
+//         cout << "UNKNOWN INSTRUCTION" << endl;
+//     }
+//     cout << "flags: Z" << regs.read_flag('Z') << " C" << regs.read_flag('C') << " N" << regs.read_flag('N') << " H" << regs.read_flag('H') << endl;
+//     cout << "PC: " << regs.pc << " AF: 0x" << hex << regs.read_reg(RT::AF) << " BC: 0x" << hex << regs.read_reg(RT::BC) << " DE: 0x" << hex << regs.read_reg(RT::DE) << " HL: 0x" << hex << regs.read_reg(RT::HL) << " SP: 0x" << hex << regs.read_reg(RT::SP) << endl;
+// }
+
+void gbCpu::debug(){
+    std::cout << std::hex << std::uppercase << std::setfill('0'); // Set formatting for hex output
+
+    std::cout << "A:" << std::setw(2) << static_cast<int>(regs.a)
+              << " F:" << std::setw(2) << static_cast<int>(regs.f)
+              << " B:" << std::setw(2) << static_cast<int>(regs.b)
+              << " C:" << std::setw(2) << static_cast<int>(regs.c)
+              << " D:" << std::setw(2) << static_cast<int>(regs.d)
+              << " E:" << std::setw(2) << static_cast<int>(regs.e)
+              << " H:" << std::setw(2) << static_cast<int>(regs.h)
+              << " L:" << std::setw(2) << static_cast<int>(regs.l);
+
+    std::cout << " SP:" << std::setw(4) << regs.sp
+              << " PC:" << std::setw(4) << regs.pc;
+
+    // For PCMEM, we might want to reset setfill to default space if subsequent output
+    // isn't intended to be zero-padded, or just ensure consistency for bytes.
+    std::cout << " PCMEM:";
+    std::cout << std::setw(2) << static_cast<int>(bus.read(regs.pc)) << ","
+              << std::setw(2) << static_cast<int>(bus.read(regs.pc+1)) << ","
+              << std::setw(2) << static_cast<int>(bus.read(regs.pc+2)) << ","
+              << std::setw(2) << static_cast<int>(bus.read(regs.pc+3)) << std::endl;
+
+    // Optional: Reset stream format to default if this is not the only place hex is used
+    std::cout << std::dec << std::noshowbase << std::setfill(' ');
 }
 
 bool gbCpu::check_cond() {
@@ -53,14 +80,8 @@ bool gbCpu::check_cond() {
 void gbCpu::goto_addr(u16 addr, bool pushpc) {
     if (check_cond()) {
         if (pushpc) {
-            // Stack operations (push current PC)
             timer.emu_cycles(2); 
-            // Assuming stack_push16 is available, otherwise implement here
-            // bus.write(regs.sp - 1, (regs.pc >> 8) & 0xFF);
-            // bus.write(regs.sp - 2, regs.pc & 0xFF);
-            // regs.sp -= 2;
-            bus.write16(regs.sp - 2, regs.pc); // Assuming bus handles stack for simplicity
-            regs.sp -= 2;
+            stack_push16(regs.pc);
         }
         regs.pc = addr;
         timer.emu_cycles(1);

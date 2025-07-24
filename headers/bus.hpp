@@ -1,13 +1,16 @@
 #pragma once
 #include "cart.hpp"
+#include "cpu.hpp"
 #include "common.hpp"
 #include <cstdint>
 
+class gbCpu;
 
 const size_t GB_MEMORY_SIZE = 65536; // Example size, adjust as needed
 
 class Bus {
     private:
+        gbCpu* cpu;
         std::vector<uint8_t> memory;
         uint8_t wram[0x2000];
         uint8_t hram[0x80];
@@ -17,8 +20,12 @@ class Bus {
         void wram_write(uint16_t address, uint8_t value);
     
     public:
-        Bus(Cart cart);
+        Bus(Cart& cart_ref, gbCpu* cpu_ptr = nullptr);
+        void set_cpu(gbCpu* cpu_ptr);
+        uint8_t get_ie_register();
+        void set_ie_register(uint8_t value);
         uint8_t read(uint16_t address);
+        uint16_t read16(uint16_t address);
         void write(uint16_t address, uint8_t value);
         void write16(uint16_t address, uint16_t value);
     };

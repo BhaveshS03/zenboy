@@ -133,3 +133,11 @@ void gbCpu::stack_push16(u16 data){
     stack_push((data>>8) & 0xff);
     stack_push(data & 0xff);
 };
+
+u8 gbCpu::get_ie_register() {
+    return ie_register;
+}
+
+void gbCpu::set_ie_register(uint8_t value) {
+    ie_register = value;
+}

@@ -5,6 +5,8 @@
 #include "timer.hpp"
 #include "common.hpp"
 
+class Bus;
+
 class gbRegisters{
 public:
     u8 a;
@@ -37,6 +39,9 @@ class gbCpu{
         void fetch();
         void decode();
         void execute();
+        void set_ie_register(uint8_t value);
+        u8 get_ie_register();
+
     private:
         gbRegisters regs;
         const InstructionData* curr_ins;
@@ -48,18 +53,20 @@ class gbCpu{
 
         u8 opcode;
         u16 mem_dest;
-        bool is_mem_dest = false;
+        u8 ie_register = 0;
+        u8 int_flags = 0;
         bool interupt_en = true;
         bool enabling_ime = false;
+        bool is_mem_dest = false;
         bool halted = false;
 
         u8 stack_pop();
         u16 stack_pop16();
         void stack_push(u8 data);
         void stack_push16(u16 data);
-
         void cpu_set_flags(int8_t z, int8_t n, int8_t h, int8_t c);
         bool is_16_bit(RT reg_type);
+
         void proc_none();
         void proc_nop();
         void proc_cb();
@@ -95,5 +102,4 @@ class gbCpu{
         void proc_sbc();
         void proc_adc();
         void proc_add();
-
     };

@@ -16,8 +16,8 @@ int Emulator::run_emu(bool debug){
     Instructions instr = Instructions();     // Create Instructions
     Timer timer = Timer();        // Create Timer
 
-
     gbCpu cpu(bus, instr, timer); // Pass pointers
+    bus.set_cpu(&cpu);
     cpu.run();
     
     return 0;

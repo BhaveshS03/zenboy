@@ -7,16 +7,17 @@
 const size_t GB_MEMORY_SIZE = 65536; // Example size, adjust as needed
 
 class Bus {
+    private:
+        std::vector<uint8_t> memory;
+        uint8_t wram[0x2000];
+        uint8_t hram[0x80];
+    
     public:
         Bus(Cart cart);
-        u8 read(uint16_t address);
-        void write16(uint16_t address, u16 value);
-        void write(uint16_t address, u8 value);
-
-    private:
-        std::vector<u8> memory;
-};
-
+        uint8_t read(uint16_t address);
+        void write(uint16_t address, uint8_t value);
+        void write16(uint16_t address, uint16_t value);
+    };
 
 // Memory map
 enum MemoryMap {

@@ -19,8 +19,19 @@ using namespace std;
 
 gbCpu::gbCpu(Bus& bus, Instructions& instr, Timer& timer)
     : bus(bus), instr(instr), timer(timer), halted(false), interupt_en(false), enabling_ime(false) {
-    regs.pc = 0x100;
-    regs.a = regs.b = regs.c = regs.d = regs.e = regs.f = regs.h = regs.l = 0;
+    
+    // Initialize registers with the provided values
+    regs.a = 0x01;
+    regs.f = 0xB0;
+    regs.b = 0x00;
+    regs.c = 0x13;
+    regs.d = 0x00;
+    regs.e = 0xD8;
+    regs.h = 0x01;
+    regs.l = 0x4D;
+    regs.sp = 0xFFFE;
+    regs.pc = 0x0100;
+
 }
 
 // void gbCpu::debug() {

@@ -101,9 +101,9 @@ void gbCpu::goto_addr(u16 addr, bool pushpc) {
     return;
 }
 
-void gbCpu::run() {
+bool gbCpu::step() {
     int i = 0;
-    while (!halted) {
+    if (!halted) {
         mem_dest = 0;
         is_mem_dest = false;
         debug();
@@ -111,12 +111,21 @@ void gbCpu::run() {
         decode();
         execute();
         i += 1;
-
-        if (enabling_ime) {
-            interupt_en = true;
-            enabling_ime = false; // Reset after one instruction
+    }
+    else{
+        if(int_flags){
+            halted=false;
         }
     }
+    if (interupt_en) {
+        cout<<"ie"<<endl;
+        cpu_handle_interrupts();
+        enabling_ime = false;
+    }
+    if (enabling_ime) {
+        interupt_en = true;
+    }
+    return true;
 }
 
 void gbCpu::fetch() {

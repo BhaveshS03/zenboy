@@ -141,3 +141,33 @@ u8 gbCpu::get_ie_register() {
 void gbCpu::set_ie_register(uint8_t value) {
     ie_register = value;
 }
+
+void gbCpu::int_handle( u16 address) {
+    stack_push16(regs.pc);
+    regs.pc = address;
+}
+
+bool gbCpu::int_check(u16 address, interrupt_type it) {
+    if (int_flags & it && ie_register & it) {
+        int_handle(address);
+        int_flags &= ~it;
+        halted = false;
+        interupt_en = false;
+        return true;
+    }
+    return false;
+}
+
+void  gbCpu::cpu_handle_interrupts() {
+    if (int_check(0x40, IT_VBLANK)) {
+
+    } else if (int_check(0x48, IT_LCD_STAT)) {
+
+    } else if (int_check(0x50, IT_TIMER)) {
+
+    }  else if (int_check(0x58, IT_SERIAL)) {
+
+    }  else if (int_check(0x60, IT_JOYPAD)) {
+
+    } 
+}

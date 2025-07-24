@@ -5,6 +5,14 @@
 #include "timer.hpp"
 #include "common.hpp"
 
+typedef enum {
+    IT_VBLANK = 1,
+    IT_LCD_STAT = 2,
+    IT_TIMER = 4,
+    IT_SERIAL = 8,
+    IT_JOYPAD = 16
+} interrupt_type;
+
 class Bus;
 
 class gbRegisters{
@@ -35,12 +43,13 @@ class gbCpu{
         void debug();
         bool check_cond();
         void goto_addr(u16 addr, bool pushpc);
-        void run();
+        bool step();
         void fetch();
         void decode();
         void execute();
         void set_ie_register(uint8_t value);
         u8 get_ie_register();
+        void cpu_handle_interrupts();
 
     private:
         gbRegisters regs;
@@ -66,6 +75,8 @@ class gbCpu{
         void stack_push16(u16 data);
         void cpu_set_flags(int8_t z, int8_t n, int8_t h, int8_t c);
         bool is_16_bit(RT reg_type);
+        void int_handle( u16 address);
+        bool int_check(u16 address, interrupt_type it);
 
         void proc_none();
         void proc_nop();
@@ -103,3 +114,4 @@ class gbCpu{
         void proc_adc();
         void proc_add();
     };
+

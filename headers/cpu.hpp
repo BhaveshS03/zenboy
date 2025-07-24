@@ -50,6 +50,9 @@ class gbCpu{
         void set_ie_register(uint8_t value);
         u8 get_ie_register();
         void cpu_handle_interrupts();
+        u8 get_int_flags();
+        void set_int_flags(u8 value);
+        void request_interrupt(interrupt_type t);
 
     private:
         gbRegisters regs;

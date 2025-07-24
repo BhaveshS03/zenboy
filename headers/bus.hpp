@@ -1,16 +1,19 @@
 #pragma once
 #include "cart.hpp"
 #include "cpu.hpp"
+#include "timer.hpp"
 #include "common.hpp"
 #include <cstdint>
 
 class gbCpu;
+class Timer;
 
 const size_t GB_MEMORY_SIZE = 65536; // Example size, adjust as needed
 
 class Bus {
     private:
         gbCpu* cpu;
+        Timer* tmr;
         std::vector<uint8_t> memory;
         uint8_t wram[0x2000];
         uint8_t hram[0x80];
@@ -18,9 +21,11 @@ class Bus {
         uint8_t wram_read(uint16_t address);
         void hram_write(uint16_t address, uint8_t value);
         void wram_write(uint16_t address, uint8_t value);
+        void io_write(u16 address, u8 value);
+        u8 io_read(u16 address);
     
     public:
-        Bus(Cart& cart_ref, gbCpu* cpu_ptr = nullptr);
+        Bus(Cart& cart_in, Timer* tmr_ptr = nullptr, gbCpu* cpu_ptr=nullptr);
         void set_cpu(gbCpu* cpu_ptr);
         uint8_t get_ie_register();
         void set_ie_register(uint8_t value);

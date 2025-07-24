@@ -4,17 +4,65 @@
 #include <algorithm>
 #include "../headers/bus.hpp"
 #include "../headers/cart.hpp"
+#include "../headers/timer.hpp"
 
 #ifndef GB_MEMORY_SIZE
 #define GB_MEMORY_SIZE 0x10000
 #endif
 
+static char serial_data[2];
+
+u8 Bus::io_read(u16 address) {
+    if (address == 0xFF01) {
+        return serial_data[0];
+    }
+
+    if (address == 0xFF02) {
+        return serial_data[1];
+    }
+
+    if (0xFF04 >= address && address <= 0xFF07) {
+        return tmr->timer_read(address);
+    }
+
+    if (address == 0xFF0F) {
+        return cpu->get_int_flags();
+    }
+
+    printf("UNSUPPORTED bus_read(%04X)\n", address);
+    return 0;
+}
+
+void Bus::io_write(u16 address, u8 value) {
+    if (address == 0xFF01) {
+        serial_data[0] = value;
+        return;
+    }
+
+    if (address == 0xFF02) {
+        serial_data[1] = value;
+        return;
+    }
+
+    if (0xFF04 >= address && address <= 0xFF07) {
+        tmr->timer_write(address, value);
+        return;
+    }
+    
+    if (address == 0xFF0F) {
+        cpu->set_int_flags(value);
+        return;
+    }
+
+    printf("UNSUPPORTED bus_write(%04X)\n", address);
+}
+
 void Bus::set_cpu(gbCpu* cpu_ptr) {
     cpu = cpu_ptr;
 }
 // Bus::Bus(Cart cart_in)
-Bus::Bus(Cart& cart_in, gbCpu* cpu_ptr){ // Initialize cart member
-
+Bus::Bus(Cart& cart_in, Timer* tmr_ptr, gbCpu* cpu_ptr){ // Initialize cart member
+    tmr = tmr_ptr;
     memory = cart_in.get_rom_data();
     if (memory.empty()) {
         std::cerr << "Error: Unable to read ROM data or ROM data is empty." << std::endl;
@@ -103,7 +151,8 @@ uint8_t Bus::read(uint16_t address) {
         // I/O Registers
         // These are memory-mapped registers for various peripherals (timers, joypad, LCD, etc.)
         // For now, returning 0 and logging unsupported access.
-        std::cerr << "Error: UNSUPPORTED bus_read(IO Registers) 0x" << std::hex << address << std::dec << std::endl;
+       io_read(address);
+        // std::cerr << "Error: UNSUPPORTED bus_read(IO Registers) 0x" << std::hex << address << std::dec << std::endl;
         return 0x00;
     } else if (address == 0xFFFF) {
         // CPU Interrupt Enable Register (IE)
@@ -138,7 +187,8 @@ void Bus::write(uint16_t address, uint8_t value) {
         // Reserved - Unusable (writes are ignored)
     } else if (address < 0xFF80) {
         // I/O Registers
-        std::cerr << "Error: UNSUPPORTED bus_write(IO Registers) 0x" << std::hex << address << std::dec << std::endl;
+        io_write(address,value);
+        // std::cerr << "Error: UNSUPPORTED bus_write(IO Registers) 0x" << std::hex << address << std::dec << std::endl;
     } else if (address == 0xFFFF) {
         // CPU Interrupt Enable Register (IE)
         cpu->set_ie_register(value);

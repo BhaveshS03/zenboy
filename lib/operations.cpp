@@ -171,3 +171,14 @@ void  gbCpu::cpu_handle_interrupts() {
 
     } 
 }
+void gbCpu::request_interrupt(interrupt_type t) {
+    int_flags |= t;
+}
+
+u8 gbCpu::get_int_flags(){
+    return int_flags;
+}
+
+void gbCpu::set_int_flags(u8 value){
+    int_flags = value;
+}

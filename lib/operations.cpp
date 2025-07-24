@@ -3,11 +3,28 @@
 
 #include <iostream>
 
-void gbRegisters::set_flag(bool Z, bool N, bool H, bool C){
-    if (Z==true) f |= 1<<7;
-    if (N==true) f |= 1<<6;
-    if (H==true) f |= 1<<5;
-    if (C==true) f |= 1<<4;
+void gbRegisters::set_flag(char flag_char, bool value) {
+    switch (flag_char) {
+        case 'Z':
+        case 'z':
+            if (value) f |= (1 << 7); else f &= ~(1 << 7);
+            break;
+        case 'N':
+        case 'n':
+            if (value) f |= (1 << 6); else f &= ~(1 << 6);
+            break;
+        case 'H':
+        case 'h':
+            if (value) f |= (1 << 5); else f &= ~(1 << 5);
+            break;
+        case 'C':
+        case 'c':
+            if (value) f |= (1 << 4); else f &= ~(1 << 4);
+            break;
+        default:
+            // Handle invalid flag character, e.g., throw an exception or log an error
+            break;
+    }
 }
 void gbRegisters::toggle_flag(bool Z, bool N, bool H, bool C){
     if (Z==true) f ^= 1<<7;

@@ -18,7 +18,7 @@ public:
     u16 pc;
     u16 sp;
 
-    void set_flag(bool Z, bool N, bool H, bool C);
+    void set_flag(char flag_char, bool value);
     void toggle_flag(bool Z, bool N, bool H, bool C);
     void clear_flag(bool Z,bool N,bool H,bool C);
     bool read_flag(char flag);
@@ -30,7 +30,13 @@ public:
 class gbCpu{
     public:
         gbCpu(Bus& bus, Instructions& instr, Timer& timer);
+        void debug();
+        bool check_cond();
+        void goto_addr(u16 addr, bool pushpc);
         void run();
+        void fetch();
+        void decode();
+        void execute();
     private:
         gbRegisters regs;
         const InstructionData* curr_ins;
@@ -40,22 +46,54 @@ class gbCpu{
         Instructions& instr; // Reference to the instructions handler
         Timer& timer;        // Reference to the timer interface
 
-        void fetch();
-        void decode();
-        void execute();
-        void debug();
-
         u8 opcode;
         u16 mem_dest;
         bool is_mem_dest = false;
-        bool check_cond();
-        void goto_addr(u16 addr, bool pushpc);
         bool interupt_en = true;
+        bool enabling_ime = false;
         bool halted = false;
 
         u8 stack_pop();
         u16 stack_pop16();
         void stack_push(u8 data);
         void stack_push16(u16 data);
+
+        void cpu_set_flags(int8_t z, int8_t n, int8_t h, int8_t c);
+        bool is_16_bit(RT reg_type);
+        void proc_none();
+        void proc_nop();
+        void proc_cb();
+        void proc_rlca();
+        void proc_rrca();
+        void proc_rla();
+        void proc_stop();
+        void proc_daa();
+        void proc_cpl();
+        void proc_scf();
+        void proc_ccf();
+        void proc_halt();
+        void proc_rra();
+        void proc_and();
+        void proc_xor();
+        void proc_or();
+        void proc_cp();
+        void proc_di();
+        void proc_ei();
+        void proc_ld();
+        void proc_ldh();
+        void proc_jp();
+        void proc_jr();
+        void proc_call();
+        void proc_rst();
+        void proc_ret();
+        void proc_reti();
+        void proc_pop();
+        void proc_push();
+        void proc_inc();
+        void proc_dec();
+        void proc_sub();
+        void proc_sbc();
+        void proc_adc();
+        void proc_add();
 
     };

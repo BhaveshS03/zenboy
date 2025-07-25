@@ -14,6 +14,8 @@
 #define CPU_FLAG_H regs.read_flag('H')
 #define CPU_FLAG_C regs.read_flag('C')
 
+char gbCpu::dbg_msg[1024] = {0};
+int gbCpu::msg_size = 0;
 
 using namespace std;
 
@@ -32,20 +34,9 @@ gbCpu::gbCpu(Bus& bus, Instructions& instr, Timer& timer)
     regs.sp = 0xFFFE;
     regs.pc = 0x0100;
 
-}
+    timer.div=0xABCC;
 
-// void gbCpu::debug() {
-//     curr_ins = instr.Instruction_by_opcode(opcode); // Re-fetch to ensure curr_ins is valid for debug
-//     cout << "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''" << endl;
-//     cout << "Current opcode: 0x" << uppercase << hex << static_cast<int>(opcode) << " (" << hex << regs.pc - 1 << " " << hex << regs.pc << " " << hex << regs.pc + 1 << ")" << endl;
-//     if (curr_ins) {
-//         cout << inst_name(curr_ins->type) << endl;
-//     } else {
-//         cout << "UNKNOWN INSTRUCTION" << endl;
-//     }
-//     cout << "flags: Z" << regs.read_flag('Z') << " C" << regs.read_flag('C') << " N" << regs.read_flag('N') << " H" << regs.read_flag('H') << endl;
-//     cout << "PC: " << regs.pc << " AF: 0x" << hex << regs.read_reg(RT::AF) << " BC: 0x" << hex << regs.read_reg(RT::BC) << " DE: 0x" << hex << regs.read_reg(RT::DE) << " HL: 0x" << hex << regs.read_reg(RT::HL) << " SP: 0x" << hex << regs.read_reg(RT::SP) << endl;
-// }
+}
 
 void gbCpu::debug(){
     std::cout << std::hex << std::uppercase << std::setfill('0'); // Set formatting for hex output
@@ -77,7 +68,7 @@ void gbCpu::debug(){
 bool gbCpu::check_cond() {
     bool flag_z = regs.read_flag('Z');
     bool flag_c = regs.read_flag('C');
-
+    // std::cout << "Checking condition: " << (int)curr_ins->cond << " Z:" << flag_z << " C:" << flag_c << std::endl;
     switch (curr_ins->cond) {
         case (CT::NONE): return true;
         case (CT::C): return flag_c;
@@ -109,6 +100,8 @@ bool gbCpu::step() {
         debug();
         fetch();
         decode();
+        dbg_update();
+        dbg_print();
         execute();
         i += 1;
     }
@@ -565,8 +558,8 @@ void gbCpu::proc_jp() {
 
 void gbCpu::proc_jr() {
     s8 rel = static_cast<s8>(fetched_data); // fetched_data is u8, cast to s8 for signed relative jump
-    u16 addr = regs.pc + rel;
-    goto_addr(addr, false);
+        u16 addr = regs.pc + rel;
+        goto_addr(addr, false);
 }
 
 void gbCpu::proc_call() {
@@ -630,28 +623,63 @@ void gbCpu::proc_push() {
 
     timer.emu_cycles(1);
 }
-
 void gbCpu::proc_inc() {
-    u16 val;
+    u16 val; // This will hold the incremented value before final assignment/truncation
+    u8 original_8bit_val = 0; // To store the original 8-bit value for H-flag calculation
     bool sixteen_bit = is_16_bit(curr_ins->reg_1);
 
-    if (curr_ins->reg_1 == RT::HL && curr_ins->mode == AM::MR) { // INC (HL)
-        val = bus.read(regs.read_reg(RT::HL)) + 1;
-        val &= 0xFF; // Ensure 8-bit result
-        bus.write(regs.read_reg(RT::HL), val);
-        timer.emu_cycles(1); // For memory write
-    } else {
-        val = regs.read_reg(curr_ins->reg_1) + 1;
-        regs.set_reg(curr_ins->reg_1, val);
+    // Handle INC (HL) - 8-bit increment of memory at HL
+    if (curr_ins->reg_1 == RT::HL && curr_ins->mode == AM::MR) {
+        u16 hl_addr = regs.read_reg(RT::HL);
+        original_8bit_val = bus.read(hl_addr); // Read original value from memory
+        val = original_8bit_val + 1;
+        bus.write(hl_addr, static_cast<u8>(val & 0xFF)); // Write back 8-bit result (handles wrap-around)
+        timer.emu_cycles(1); // Cycle for memory write
+
+        // Flags for INC (HL) - 8-bit operation
+        // Z flag: Set if result is 0
+        // N flag: Reset (0)
+        // H flag: Set if carry from bit 3 to bit 4 (i.e., original lower nibble was 0xF)
+        // C flag: Unaffected (-1)
+        cpu_set_flags(
+            (val & 0xFF) == 0,                  // Z flag
+            0,                                  // N flag (always 0 for INC)
+            (original_8bit_val & 0x0F) == 0x0F, // H flag
+            -1                                  // C flag (unaffected)
+        );
+        return; // INC (HL) is complete, return early
     }
+
+    // Handle INC R (8-bit register) or INC RR (16-bit register)
+    u16 old_reg_val = regs.read_reg(curr_ins->reg_1); // Get original register value
 
     if (sixteen_bit) {
-        timer.emu_cycles(1); // For 16-bit register increment
-        return; // 16-bit INC does not affect Z, N, H flags
+        // 16-bit INC (e.g., INC BC, INC DE, INC HL, INC SP)
+        val = old_reg_val + 1;
+        regs.set_reg(curr_ins->reg_1, val);
+        timer.emu_cycles(1); // Additional cycle for 16-bit register increment
+
+        // 16-bit INC instructions do NOT affect any flags.
+        // We explicitly do NOT call cpu_set_flags here to preserve existing flags.
+        return;
     }
 
-    // For 8-bit INC
-    cpu_set_flags((val & 0xFF) == 0, 0, ((val & 0x0F) == 0x00), -1);
+    // Handle INC R (8-bit register) - e.g., INC A, INC B, INC E
+    original_8bit_val = static_cast<u8>(old_reg_val); // Get original 8-bit value for H-flag
+    val = original_8bit_val + 1; // Perform 8-bit increment
+    regs.set_reg(curr_ins->reg_1, static_cast<u8>(val & 0xFF)); // Set register, ensures 8-bit wrap-around
+
+    // Flags for 8-bit INC R
+    // Z flag: Set if result is 0
+    // N flag: Reset (0)
+    // H flag: Set if carry from bit 3 to bit 4 (i.e., original lower nibble was 0xF)
+    // C flag: Unaffected (-1)
+    cpu_set_flags(
+        (val & 0xFF) == 0,                  // Z flag
+        0,                                  // N flag (always 0 for INC)
+        (original_8bit_val & 0x0F) == 0x0F, // H flag
+        -1                                  // C flag (unaffected)
+    );
 }
 
 void gbCpu::proc_dec() {

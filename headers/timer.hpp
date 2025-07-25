@@ -6,11 +6,11 @@ class gbCpu;
 class Timer{
     private:
         gbCpu* cpu;
-        u16 div;
         u8 tma;
         u8 tima;
         u8 tac; 
     public:
+        u16 div;
         Timer(gbCpu* cpu = nullptr);
         void emu_cycles(int cycle);
         u8 timer_read(u16 address);

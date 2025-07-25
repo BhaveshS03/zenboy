@@ -40,10 +40,10 @@ void gbRegisters::clear_flag(bool Z,bool N,bool H,bool C){
 }
 bool gbRegisters::read_flag(char flag){
     switch(flag){
-        case 'Z': return (f<<7)&1;
-        case 'N': return (f<<6)&1;
-        case 'H': return (f<<5)&1;
-        case 'C': return (f<<4)&1;
+        case 'Z': return (f>>7)&1;
+        case 'N': return (f>>6)&1;
+        case 'H': return (f>>5)&1;
+        case 'C': return (f>>4)&1;
     }
     return 0;
 }
@@ -118,7 +118,7 @@ std::string gbRegisters::Register_by_Name(RT reg){
 }
 
 u8 gbCpu::stack_pop(){
-    return bus.read(regs.sp--);
+    return bus.read(regs.sp++);
 };
 u16 gbCpu::stack_pop16(){
     u8 hi = stack_pop();
@@ -182,3 +182,16 @@ u8 gbCpu::get_int_flags(){
 void gbCpu::set_int_flags(u8 value){
     int_flags = value;
 }
+
+void gbCpu::dbg_update(){
+    if (bus.read(0xFF02) == 0x81) {
+        char c = bus.read(0xFF01);
+        dbg_msg[msg_size++] = c;
+        bus.write(0xFF02, 0);
+    }
+};
+void gbCpu::dbg_print(){   
+    if (dbg_msg[0]) {
+    std::cout<<"DBG:"<<dbg_msg<<std::endl;
+    exit(-1);
+}};

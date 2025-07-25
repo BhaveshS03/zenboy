@@ -53,6 +53,10 @@ class gbCpu{
         u8 get_int_flags();
         void set_int_flags(u8 value);
         void request_interrupt(interrupt_type t);
+        void dbg_update();
+        void dbg_print();
+        static char dbg_msg[1024];
+        static int msg_size;
 
     private:
         gbRegisters regs;

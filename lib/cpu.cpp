@@ -110,8 +110,8 @@ bool gbCpu::step() {
             halted=false;
         }
     }
-    if (interupt_en) {
-        cout<<"ie"<<endl;
+    if (interupt_en) { 
+        cerr<<"ie"<<endl;
         cpu_handle_interrupts();
         enabling_ime = false;
     }
@@ -244,12 +244,16 @@ void gbCpu::decode() {
             regs.set_reg(RT::HL, regs.read_reg(RT::HL) - 1);
             break;
         }
-        case AM::R_HLI: { // R, (HLI) -> LD R, (HL+)
-            fetched_data = bus.read(regs.read_reg(curr_ins->reg_2));
+        case AM::R_HLI: {
+            u16 addr = regs.read_reg(curr_ins->reg_2);
+            u8 val = bus.read(addr);
+            std::cerr << "HL = 0x" << std::hex << addr << ", mem[HL] = " << (int)val << std::endl;
+            fetched_data = val;
             timer.emu_cycles(1);
-            regs.set_reg(RT::HL, regs.read_reg(RT::HL) + 1);
+            regs.set_reg(RT::HL, addr + 1);
             break;
         }
+        
         case AM::R_HLD: { // R, (HLD) -> LD R, (HL-)
             fetched_data = bus.read(regs.read_reg(curr_ins->reg_2));
             timer.emu_cycles(1);
@@ -513,11 +517,15 @@ void gbCpu::proc_ei() {
 
 void gbCpu::proc_ld() {
     if (is_mem_dest) {
+        
         if (is_16_bit(curr_ins->reg_2) || is_16_bit(curr_ins->reg_1)) { // Check if source or dest is 16-bit to determine write size
             // If reg_2 is 16-bit (like LD (A16), SP), fetched_data is 16-bit
             // If reg_1 is 16-bit (like LD SP, (HL)), fetched_data is also 16-bit after being read.
             bus.write16(mem_dest, fetched_data);
             timer.emu_cycles(1);
+            if(curr_ins->reg_1 == RT::SP){
+                regs.set_reg(RT::SP, fetched_data);
+            }
         } else {
             bus.write(mem_dest, fetched_data & 0xFF); // Ensure 8-bit write
         }

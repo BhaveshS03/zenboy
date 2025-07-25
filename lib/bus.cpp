@@ -21,7 +21,7 @@ u8 Bus::io_read(u16 address) {
         return serial_data[1];
     }
 
-    if (0xFF04 >= address && address <= 0xFF07) {
+    if (address >= 0xFF04 && address <= 0xFF07) {
         return tmr->timer_read(address);
     }
 
@@ -29,7 +29,7 @@ u8 Bus::io_read(u16 address) {
         return cpu->get_int_flags();
     }
 
-    printf("UNSUPPORTED bus_read(%04X)\n", address);
+    // printf("UNSUPPORTED bus_read(%04X)\n", address);
     return 0;
 }
 
@@ -54,7 +54,7 @@ void Bus::io_write(u16 address, u8 value) {
         return;
     }
 
-    printf("UNSUPPORTED bus_write(%04X)\n", address);
+    // std::cerr<<"UNSUPPORTED bus_write"<<hex<<(int)address;
 }
 
 void Bus::set_cpu(gbCpu* cpu_ptr) {
@@ -118,13 +118,15 @@ void Bus::hram_write(uint16_t address, uint8_t value) {
 
 
 uint8_t Bus::read(uint16_t address) {
+
+    if (address == 0xFF44) {
+        return 0X90; // or however you track LY
+    }
     if (address < 0x8000) {
         // ROM Bank 0 and 1 (Switchable)
         return memory[address];
     } else if (address < 0xA000) {
         // CHR RAM / BG Map Data (VRAM)
-        // This region is typically handled by the PPU, not directly by main bus memory
-        // For now, returning 0 and logging unsupported access.
         std::cerr << "Error: UNSUPPORTED bus_read(VRAM) 0x" << std::hex << address << std::dec << std::endl;
         return 0x00;
     } else if (address < 0xC000) {
@@ -134,26 +136,16 @@ uint8_t Bus::read(uint16_t address) {
         // WRAM (Working RAM) - Bank 0 and 1-7 (switchable)
         return wram_read(address);
     } else if (address < 0xFE00) {
-        // Reserved - Echo RAM (mirror of C000-DDFF)
-        // Accessing this range should mirror WRAM.
-        // For simplicity, returning 0 for now as per the provided snippet's "return 0".
-        // A more accurate emulator would map this to wram_read(address - 0x2000).
-        return 0x00;
+        return wram_read(address  - 0x2000);
     } else if (address < 0xFEA0) {
         // Object Attribute Memory (OAM)
-        // This region is typically handled by the PPU
         std::cerr << "Error: UNSUPPORTED bus_read(OAM) 0x" << std::hex << address << std::dec << std::endl;
         return 0x00;
     } else if (address < 0xFF00) {
         // Reserved - Unusable
         return 0x00;
     } else if (address < 0xFF80) {
-        // I/O Registers
-        // These are memory-mapped registers for various peripherals (timers, joypad, LCD, etc.)
-        // For now, returning 0 and logging unsupported access.
-       io_read(address);
-        // std::cerr << "Error: UNSUPPORTED bus_read(IO Registers) 0x" << std::hex << address << std::dec << std::endl;
-        return 0x00;
+        return io_read(address);
     } else if (address == 0xFFFF) {
         // CPU Interrupt Enable Register (IE)
         return cpu->get_ie_register();
@@ -177,9 +169,7 @@ void Bus::write(uint16_t address, uint8_t value) {
         // WRAM (Working RAM)
         wram_write(address, value);
     } else if (address < 0xFE00) {
-        // Reserved - Echo RAM (writes are usually ignored or mirror WRAM)
-        // For simplicity, doing nothing as per the provided snippet.
-        // A more accurate emulator would map this to wram_write(address - 0x2000, value).
+        wram_write(address - 0x2000, value);
     } else if (address < 0xFEA0) {
         // Object Attribute Memory (OAM)
         std::cerr << "Error: UNSUPPORTED bus_write(OAM) 0x" << std::hex << address << std::dec << std::endl;

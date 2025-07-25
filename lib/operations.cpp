@@ -92,6 +92,8 @@ void gbRegisters::set_reg(RT reg, uint16_t value) {
             h = static_cast<uint8_t>(value >> 8);
             l = static_cast<uint8_t>(value & 0xFF);
             break;
+        case RT::SP: sp = value; break;
+        case RT::PC: pc = value; break;
         default:
             // Same error handling as in read_reg
             std::invalid_argument("Invalid register");
@@ -192,6 +194,5 @@ void gbCpu::dbg_update(){
 };
 void gbCpu::dbg_print(){   
     if (dbg_msg[0]) {
-    std::cout<<"DBG:"<<dbg_msg<<std::endl;
-    exit(-1);
+    std::cerr<<"DBG:"<<dbg_msg<<std::endl;
 }};

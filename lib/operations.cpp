@@ -1,4 +1,4 @@
-#include "..\headers\cpu.hpp"
+#include "cpu.hpp"
 #include "bus.hpp"
 
 #include <iostream>

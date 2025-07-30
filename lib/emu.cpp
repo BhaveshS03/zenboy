@@ -17,12 +17,14 @@ int Emulator::run_emu(bool debug){
 
     gbCpu cpu(bus, instr, timer); // Pass pointers
     bus.set_cpu(&cpu);
+    int i=0;
     while(true){
         if (!cpu.step()) {
             printf("CPU Stopped\n");
             return 0;
         }
         timer.timer_tick();
+        i+=1;
     }
     
     return 0;

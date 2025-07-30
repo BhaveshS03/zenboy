@@ -40,6 +40,7 @@ public:
 class gbCpu{
     public:
         gbCpu(Bus& bus, Instructions& instr, Timer& timer);
+        gbRegisters regs;
         void debug();
         bool check_cond();
         void goto_addr(u16 addr, bool pushpc);
@@ -59,7 +60,6 @@ class gbCpu{
         static int msg_size;
 
     private:
-        gbRegisters regs;
         const InstructionData* curr_ins;
         u16 fetched_data;
         

@@ -125,8 +125,8 @@ u8 gbCpu::stack_pop(){
     return bus.read(regs.sp++);
 };
 u16 gbCpu::stack_pop16(){
-    u8 hi = stack_pop();
     u8 lo = stack_pop();
+    u8 hi = stack_pop();
     return (hi<<8)|lo; 
 };
 void gbCpu::stack_push(u8 data){
@@ -196,5 +196,5 @@ void gbCpu::dbg_update(){
 };
 void gbCpu::dbg_print(){   
     if (dbg_msg[0]) {
-    // std::cerr<<"DBG:"<<dbg_msg<<std::endl;
+    std::cerr<<"DBG:"<<dbg_msg<<std::endl;
 }};

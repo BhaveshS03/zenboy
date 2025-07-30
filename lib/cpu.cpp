@@ -112,6 +112,7 @@ bool gbCpu::step() {
     }
     if (interupt_en) { 
         cerr<<"ie"<<endl;
+        // exit(-1);
         cpu_handle_interrupts();
         enabling_ime = false;
     }
@@ -517,7 +518,7 @@ void gbCpu::proc_ei() {
 void gbCpu::proc_ld() {
     if (is_mem_dest) {
         
-        if (is_16_bit(curr_ins->reg_2) || is_16_bit(curr_ins->reg_1)) { // Check if source or dest is 16-bit to determine write size
+        if (curr_ins->mode == AM::A16_R && curr_ins->reg_2 == RT::SP) { // Check if source or dest is 16-bit to determine write size
             // If reg_2 is 16-bit (like LD (A16), SP), fetched_data is 16-bit
             // If reg_1 is 16-bit (like LD SP, (HL)), fetched_data is also 16-bit after being read.
             bus.write16(mem_dest, fetched_data);
@@ -561,12 +562,14 @@ void gbCpu::proc_ldh() {
 
 void gbCpu::proc_jp() {
     goto_addr(fetched_data, false);
+    return;
 }
 
 void gbCpu::proc_jr() {
     s8 rel = static_cast<s8>(fetched_data); // fetched_data is u8, cast to s8 for signed relative jump
-        u16 addr = regs.pc + rel;
-        goto_addr(addr, false);
+    u16 addr = regs.pc + rel;
+    goto_addr(addr, false);
+    return;
 }
 
 void gbCpu::proc_call() {
@@ -600,18 +603,16 @@ void gbCpu::proc_reti() {
 }
 
 void gbCpu::proc_pop() {
-    u16 lo = bus.read(regs.sp);
-    timer.emu_cycles(1);
-    u16 hi = bus.read(regs.sp + 1);
-    timer.emu_cycles(1);
-    u16 n = (hi << 8) | lo;
-    regs.sp += 2; // Increment SP after pop
-
-    regs.set_reg(curr_ins->reg_1, n);
-
-    if (curr_ins->reg_1 == RT::AF) {
-        // When popping to AF, the lower 4 bits of F (flags) are always 0
-        regs.set_reg(curr_ins->reg_1, n & 0xFFF0);
+    u16 n = stack_pop16();
+    timer.emu_cycles(2);  // 2 cycles for 16-bit pop
+    if (curr_ins->reg_1 == RT::HL) {
+        regs.h = (n >> 8);
+        regs.l = (n & 0xFF);
+    } else if (curr_ins->reg_1 == RT::AF) {
+        regs.a = (n >> 8);
+        regs.f = (n & 0xF0); // lower 4 bits must be 0
+    } else {
+        regs.set_reg(curr_ins->reg_1, n);
     }
 }
 
@@ -689,29 +690,49 @@ void gbCpu::proc_inc() {
     );
 }
 
+// Corrected proc_dec function
 void gbCpu::proc_dec() {
-    u16 val;
-    bool sixteen_bit = is_16_bit(curr_ins->reg_1);
-
-    if (curr_ins->reg_1 == RT::HL && curr_ins->mode == AM::MR) { // DEC (HL)
-        val = bus.read(regs.read_reg(RT::HL)) - 1;
-        val &= 0xFF; // Ensure 8-bit result
-        bus.write(regs.read_reg(RT::HL), val);
+    // Handle DEC (HL) first, as it's a special 8-bit memory operation
+    if (curr_ins->reg_1 == RT::HL && curr_ins->mode == AM::MR) {
+        u16 addr = regs.read_reg(RT::HL);
+        u8 original_val = bus.read(addr);
+        u8 result = original_val - 1;
+        bus.write(addr, result);
         timer.emu_cycles(1); // For memory write
-    } else {
-        val = regs.read_reg(curr_ins->reg_1) - 1;
-        regs.set_reg(curr_ins->reg_1, val);
+
+        // Set flags for 8-bit DEC
+        cpu_set_flags(
+            result == 0,       // Z flag
+            1,                 // N flag
+            (original_val & 0x0F) < (result & 0x0F), // H flag (check for borrow from bit 4)
+            -1                 // C flag is unaffected
+        );
+        return; // Operation complete
     }
 
+    bool sixteen_bit = is_16_bit(curr_ins->reg_1);
+    u16 val = regs.read_reg(curr_ins->reg_1) - 1;
+
+    // Handle 16-bit register DEC (BC, DE, HL, SP)
     if (sixteen_bit) {
-        timer.emu_cycles(1); // For 16-bit register decrement
-        return; // 16-bit DEC does not affect Z, N, H flags
+        regs.set_reg(curr_ins->reg_1, val);
+        timer.emu_cycles(1);
+        // 16-bit DEC does not affect flags, so we return
+        return;
     }
 
-    // For 8-bit DEC
-    cpu_set_flags((val & 0xFF) == 0, 1, ((val & 0x0F) == 0x0F), -1);
+    // Handle 8-bit register DEC (A, B, C, D, E, H, L)
+    regs.set_reg(curr_ins->reg_1, val);
+    u8 original_val = static_cast<u8>(val + 1);
+    u8 result = static_cast<u8>(val);
+    
+    cpu_set_flags(
+        result == 0,
+        1,
+        (original_val & 0x0F) < (result & 0x0F),
+        -1
+    );
 }
-
 void gbCpu::proc_sub() {
     u16 reg1_val = regs.read_reg(curr_ins->reg_1); // Assuming reg_1 is A
     u16 val = reg1_val - fetched_data;

@@ -44,7 +44,7 @@ void Bus::io_write(u16 address, u8 value) {
         return;
     }
 
-    if (address >= 0xFF04 && address <= 0xFF07) {
+    if (0xFF04 >= address && address <= 0xFF07) {
         tmr->timer_write(address, value);
         return;
     }
@@ -77,27 +77,13 @@ Bus::Bus(Cart& cart_in, Timer* tmr_ptr, gbCpu* cpu_ptr){ // Initialize cart memb
 }
 
 uint8_t Bus::wram_read(uint16_t address) {
-    if (address == 0xD81B) {
-        std::cerr << "WRAM_READ 0xD81B: address=0x" << std::hex << address << std::endl;
-    }
-    
     uint16_t offset = address - 0xC000;
-    
-    if (address == 0xD81B) {
-        std::cerr << "WRAM_READ 0xD81B: offset=0x" << std::hex << offset << std::endl;
-    }
     
     if (offset >= 0x2000) {
         std::cerr << "Error: Invalid WRAM read address 0x" << std::hex << address << std::dec << std::endl;
         exit(-1);
     }
-    
     uint8_t result = wram[offset];
-    
-    if (address == 0xD81B) {
-        std::cerr << "WRAM_READ 0xD81B: wram[0x" << std::hex << offset << "]=0x" << (int)result << std::endl;
-    }
-    
     return result;
 }
 

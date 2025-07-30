@@ -10,7 +10,7 @@
 int Emulator::run_emu(bool debug){
     Timer timer = Timer();        // Create Timer
     Cart cart;
-    cart.read_rom("./roms/7cpu.gb");
+    cart.read_rom("./roms/3cpu.gb");
 
     Bus bus = Bus(cart, &timer, nullptr);    // Create Bus
     Instructions instr = Instructions();     // Create Instructions

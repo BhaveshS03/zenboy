@@ -769,42 +769,48 @@ void gbCpu::proc_adc() {
                   (a & 0xF) + (u & 0xF) + c > 0xF, // Half-carry
                   a + u + c > 0xFF); // Carry
 }
-
 void gbCpu::proc_add() {
-    u32 val;
-    bool is_16bit_reg1 = is_16_bit(curr_ins->reg_1);
-
-    if (is_16bit_reg1) {
-        val = regs.read_reg(curr_ins->reg_1) + fetched_data;
-        timer.emu_cycles(1);
-    } else { // 8-bit ADD
-        val = regs.read_reg(curr_ins->reg_1) + fetched_data;
-    }
-
-    int z = -1;
-    int h;
-    int c;
-
-    if (is_16bit_reg1) {
-        if (curr_ins->reg_1 == RT::SP) { // ADD SP, r8
-            z = 0; // Z flag is always 0 for ADD SP, r8
-            h = ( (regs.read_reg(RT::SP) & 0xF) + (fetched_data & 0xF) ) >= 0x10;
-            c = ( (regs.read_reg(RT::SP) & 0xFF) + (fetched_data & 0xFF) ) >= 0x100;
-        } else { // ADD HL, BC/DE/HL/SP (16-bit adds)
-            z = -1; // Z flag unaffected for HL adds
-            h = ( (regs.read_reg(curr_ins->reg_1) & 0xFFF) + (fetched_data & 0xFFF) ) >= 0x1000;
-            c = ( (u32)regs.read_reg(curr_ins->reg_1) + (u32)fetched_data ) >= 0x10000;
+    bool is_16bit = is_16_bit(curr_ins->reg_1);
+    u16 reg_val = regs.read_reg(curr_ins->reg_1);
+    u32 result;
+    
+    if (is_16bit) {
+        if (curr_ins->reg_1 == RT::SP) {
+            // ADD SP, r8 - signed 8-bit offset
+            result = reg_val + (s8)fetched_data;
+        } else {
+            // ADD HL, rr - 16-bit add
+            result = reg_val + fetched_data;
         }
-    } else { // 8-bit ADD (ADD A, R / A, D8 / A, (HL))
-        z = (val & 0xFF) == 0;
-        h = ((regs.read_reg(curr_ins->reg_1) & 0xF) + (fetched_data & 0xF)) >= 0x10;
-        c = ((regs.read_reg(curr_ins->reg_1) & 0xFF) + (fetched_data & 0xFF)) >= 0x100;
+        timer.emu_cycles(1);
+    } else {
+        // ADD A, n - 8-bit add
+        result = reg_val + fetched_data;
     }
-
-    regs.set_reg(curr_ins->reg_1, val & 0xFFFF); // Store result (handle 16-bit correctly)
-    cpu_set_flags(z, 0, h, c); // N flag is always 0 for ADD
+    
+    // Set flags
+    int z, h, c;
+    
+    if (is_16bit && curr_ins->reg_1 == RT::SP) {
+        // ADD SP, r8 flags
+        z = 0;
+        h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
+        c = ((reg_val & 0xFF) + (fetched_data & 0xFF)) >= 0x100;
+    } else if (is_16bit) {
+        // ADD HL, rr flags
+        z = -1; // unchanged
+        h = ((reg_val & 0xFFF) + (fetched_data & 0xFFF)) >= 0x1000;
+        c = result >= 0x10000;
+    } else {
+        // ADD A, n flags
+        z = (result & 0xFF) == 0;
+        h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
+        c = result >= 0x100;
+    }
+    
+    regs.set_reg(curr_ins->reg_1, result & 0xFFFF);
+    cpu_set_flags(z, 0, h, c);
 }
-
 // --- Main Execute Function ---
 void gbCpu::execute() {
     switch (curr_ins->type) {

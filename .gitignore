@@ -1,4 +1,5 @@
 roms/
 build/
 .vscode/
-./gameboy-doctor
+gameboy-doctor/
+log.txt

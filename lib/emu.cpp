@@ -22,6 +22,7 @@ int Emulator::run_emu(bool debug){
             printf("CPU Stopped\n");
             return 0;
         }
+        timer.timer_tick();
     }
     
     return 0;

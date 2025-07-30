@@ -5,11 +5,16 @@ Timer::Timer(gbCpu* cpu_ptr){
 }
 
 void Timer::emu_cycles(int cycles){
-    return;
+    for (int i = 0; i < cycles; i++) {
+        timer_tick();
+    }
 };
 
 void Timer::timer_init() {
     div = 0xAC00;
+    tac = 0x00;  
+    tima = 0x00;   
+    tma = 0x00;  
 }
 
 void Timer::timer_tick() {
@@ -75,5 +80,6 @@ u8 Timer::timer_read(u16 address) {
             return tma;
         case 0xFF07:
             return tac;
+        default: return 0x00; 
     }
 }

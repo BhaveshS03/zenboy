@@ -245,9 +245,8 @@ void gbCpu::decode() {
             break;
         }
         case AM::R_HLI: {
-            u16 addr = regs.read_reg(curr_ins->reg_2);
+            u16 addr = regs.read_reg(RT::HL);
             u8 val = bus.read(addr);
-            std::cerr << "HL = 0x" << std::hex << addr << ", mem[HL] = " << (int)val << std::endl;
             fetched_data = val;
             timer.emu_cycles(1);
             regs.set_reg(RT::HL, addr + 1);

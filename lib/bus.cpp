@@ -77,13 +77,28 @@ Bus::Bus(Cart& cart_in, Timer* tmr_ptr, gbCpu* cpu_ptr){ // Initialize cart memb
 }
 
 uint8_t Bus::wram_read(uint16_t address) {
+    if (address == 0xD81B) {
+        std::cerr << "WRAM_READ 0xD81B: address=0x" << std::hex << address << std::endl;
+    }
+    
     uint16_t offset = address - 0xC000;
+    
+    if (address == 0xD81B) {
+        std::cerr << "WRAM_READ 0xD81B: offset=0x" << std::hex << offset << std::endl;
+    }
     
     if (offset >= 0x2000) {
         std::cerr << "Error: Invalid WRAM read address 0x" << std::hex << address << std::dec << std::endl;
         exit(-1);
     }
-    return wram[offset];
+    
+    uint8_t result = wram[offset];
+    
+    if (address == 0xD81B) {
+        std::cerr << "WRAM_READ 0xD81B: wram[0x" << std::hex << offset << "]=0x" << (int)result << std::endl;
+    }
+    
+    return result;
 }
 
 void Bus::wram_write(uint16_t address, uint8_t value) {
@@ -118,7 +133,6 @@ void Bus::hram_write(uint16_t address, uint8_t value) {
 
 
 uint8_t Bus::read(uint16_t address) {
-
     if (address == 0xFF44) {
         return 0X90; // or however you track LY
     }
@@ -127,7 +141,7 @@ uint8_t Bus::read(uint16_t address) {
         return memory[address];
     } else if (address < 0xA000) {
         // CHR RAM / BG Map Data (VRAM)
-        std::cerr << "Error: UNSUPPORTED bus_read(VRAM) 0x" << std::hex << address << std::dec << std::endl;
+        // std::cerr << "Error: UNSUPPORTED bus_read(VRAM) 0x" << std::hex << address << std::dec << std::endl;
         return 0x00;
     } else if (address < 0xC000) {
         // Cartridge RAM (External RAM)
@@ -139,7 +153,7 @@ uint8_t Bus::read(uint16_t address) {
         return wram_read(address  - 0x2000);
     } else if (address < 0xFEA0) {
         // Object Attribute Memory (OAM)
-        std::cerr << "Error: UNSUPPORTED bus_read(OAM) 0x" << std::hex << address << std::dec << std::endl;
+        // std::cerr << "Error: UNSUPPORTED bus_read(OAM) 0x" << std::hex << address << std::dec << std::endl;
         return 0x00;
     } else if (address < 0xFF00) {
         // Reserved - Unusable
@@ -161,7 +175,7 @@ void Bus::write(uint16_t address, uint8_t value) {
         memory[address] = value;
     } else if (address < 0xA000) {
         // CHR RAM / BG Map Data (VRAM)
-        std::cerr << "Error: UNSUPPORTED bus_write(VRAM) 0x" << std::hex << address << std::dec << std::endl;
+        // std::cerr << "Error: UNSUPPORTED bus_write(VRAM) 0x" << std::hex << address << std::dec << std::endl;
     } else if (address < 0xC000) {
         // Cartridge RAM (External RAM)
         memory[address] = value;
@@ -172,7 +186,7 @@ void Bus::write(uint16_t address, uint8_t value) {
         wram_write(address - 0x2000, value);
     } else if (address < 0xFEA0) {
         // Object Attribute Memory (OAM)
-        std::cerr << "Error: UNSUPPORTED bus_write(OAM) 0x" << std::hex << address << std::dec << std::endl;
+        // std::cerr << "Error: UNSUPPORTED bus_write(OAM) 0x" << std::hex << address << std::dec << std::endl;
     } else if (address < 0xFF00) {
         // Reserved - Unusable (writes are ignored)
     } else if (address < 0xFF80) {

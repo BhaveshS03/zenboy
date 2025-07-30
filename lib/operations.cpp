@@ -67,6 +67,7 @@ u16 gbRegisters::read_reg(RT reg){
             return 0;
     }
 }
+
 void gbRegisters::set_reg(RT reg, uint16_t value) {
     switch (reg) {
         case RT::A:  a = static_cast<uint8_t>(value); break; // Cast to 8-bit
@@ -100,6 +101,7 @@ void gbRegisters::set_reg(RT reg, uint16_t value) {
             break;
     }
 }
+
 std::string gbRegisters::Register_by_Name(RT reg){
     switch (reg) {
         case RT::A: return "A";
@@ -167,9 +169,9 @@ void  gbCpu::cpu_handle_interrupts() {
 
     } else if (int_check(0x50, IT_TIMER)) {
 
-    }  else if (int_check(0x58, IT_SERIAL)) {
+    } else if (int_check(0x58, IT_SERIAL)) {
 
-    }  else if (int_check(0x60, IT_JOYPAD)) {
+    } else if (int_check(0x60, IT_JOYPAD)) {
 
     } 
 }
@@ -194,5 +196,5 @@ void gbCpu::dbg_update(){
 };
 void gbCpu::dbg_print(){   
     if (dbg_msg[0]) {
-    std::cerr<<"DBG:"<<dbg_msg<<std::endl;
+    // std::cerr<<"DBG:"<<dbg_msg<<std::endl;
 }};

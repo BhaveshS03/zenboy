@@ -774,20 +774,6 @@ void gbCpu::proc_add() {
     u16 reg_val = regs.read_reg(curr_ins->reg_1);
     u32 result;
     
-    if (is_16bit) {
-        if (curr_ins->reg_1 == RT::SP) {
-            // ADD SP, r8 - signed 8-bit offset
-            result = reg_val + (s8)fetched_data;
-        } else {
-            // ADD HL, rr - 16-bit add
-            result = reg_val + fetched_data;
-        }
-        timer.emu_cycles(1);
-    } else {
-        // ADD A, n - 8-bit add
-        result = reg_val + fetched_data;
-    }
-    
     // Set flags
     int z, h, c;
     
@@ -796,16 +782,21 @@ void gbCpu::proc_add() {
         z = 0;
         h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
         c = ((reg_val & 0xFF) + (fetched_data & 0xFF)) >= 0x100;
+        result = reg_val + (s8)fetched_data;
+        timer.emu_cycles(1);
     } else if (is_16bit) {
         // ADD HL, rr flags
         z = -1; // unchanged
         h = ((reg_val & 0xFFF) + (fetched_data & 0xFFF)) >= 0x1000;
         c = result >= 0x10000;
+        result = reg_val + fetched_data;
+        timer.emu_cycles(1);
     } else {
         // ADD A, n flags
         z = (result & 0xFF) == 0;
         h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
         c = result >= 0x100;
+        result = reg_val + fetched_data;
     }
     
     regs.set_reg(curr_ins->reg_1, result & 0xFFFF);

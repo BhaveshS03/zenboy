@@ -10,7 +10,7 @@
 int Emulator::run_emu(bool debug){
     Timer timer = Timer();        // Create Timer
     Cart cart;
-    cart.read_rom("./roms/3cpu.gb");
+    cart.read_rom("../../roms/04-op r,imm.gb");
 
     Bus bus = Bus(cart, &timer, nullptr);    // Create Bus
     Instructions instr = Instructions();     // Create Instructions
@@ -20,7 +20,7 @@ int Emulator::run_emu(bool debug){
     int i=0;
     while(true){
         if (!cpu.step()) {
-            printf("CPU Stopped\n");
+            std::cout<<("CPU Stopped\n");
             return 0;
         }
         timer.timer_tick();

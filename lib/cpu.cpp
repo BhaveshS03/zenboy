@@ -746,14 +746,18 @@ void gbCpu::proc_sub() {
 }
 
 void gbCpu::proc_sbc() {
-    u16 reg1_val = regs.read_reg(curr_ins->reg_1); // Assuming reg_1 is A
-    u16 val = fetched_data + CPU_FLAG_C; // Value to subtract + carry
+    u8 a = regs.read_reg(curr_ins->reg_1);     // A register
+    u8 imm = fetched_data;                     // immediate byte
+    u8 carry = CPU_FLAG_C;                  // actual carry bit
 
-    int z = (reg1_val - val) == 0;
-    int h = ((int)reg1_val & 0xF) - ((int)fetched_data & 0xF) - ((int)CPU_FLAG_C) < 0;
-    int c = ((int)reg1_val) - ((int)fetched_data) - ((int)CPU_FLAG_C) < 0;
+    u16 rhs = imm + carry;
+    u16 diff = a - rhs;
 
-    regs.set_reg(curr_ins->reg_1, (reg1_val - val) & 0xFF);
+    int z = ((diff & 0xFF) == 0);
+    int h = ((a & 0x0F) < ((imm & 0x0F) + carry));
+    int c = (a < rhs);
+
+    regs.set_reg(curr_ins->reg_1, diff & 0xFF);
     cpu_set_flags(z, 1, h, c);
 }
 
@@ -769,39 +773,47 @@ void gbCpu::proc_adc() {
                   (a & 0xF) + (u & 0xF) + c > 0xF, // Half-carry
                   a + u + c > 0xFF); // Carry
 }
+
 void gbCpu::proc_add() {
     bool is_16bit = is_16_bit(curr_ins->reg_1);
-    u16 reg_val = regs.read_reg(curr_ins->reg_1);
-    u32 result;
-    
-    // Set flags
-    int z, h, c;
-    
+    u16 a = regs.read_reg(curr_ins->reg_1);
+    u32 sum;
+
+    int z = -1, h = 0, c = 0;
+
     if (is_16bit && curr_ins->reg_1 == RT::SP) {
-        // ADD SP, r8 flags
+        s8 imm = (s8)fetched_data;
+
+        sum = a + imm;
+
         z = 0;
-        h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
-        c = ((reg_val & 0xFF) + (fetched_data & 0xFF)) >= 0x100;
-        result = reg_val + (s8)fetched_data;
+        h = ((a & 0x0F) + ((u8)imm & 0x0F)) > 0x0F;
+        c = ((a & 0xFF) + (u8)imm) > 0xFF;
         timer.emu_cycles(1);
-    } else if (is_16bit) {
-        // ADD HL, rr flags
-        z = -1; // unchanged
-        h = ((reg_val & 0xFFF) + (fetched_data & 0xFFF)) >= 0x1000;
-        c = result >= 0x10000;
-        result = reg_val + fetched_data;
-        timer.emu_cycles(1);
-    } else {
-        // ADD A, n flags
-        z = (result & 0xFF) == 0;
-        h = ((reg_val & 0xF) + (fetched_data & 0xF)) >= 0x10;
-        c = result >= 0x100;
-        result = reg_val + fetched_data;
     }
-    
-    regs.set_reg(curr_ins->reg_1, result & 0xFFFF);
+
+    // --- ADD HL, rr ---
+    else if (is_16bit) {
+        sum = a + fetched_data;
+
+        h = ((a & 0x0FFF) + (fetched_data & 0x0FFF)) > 0x0FFF;
+        c = sum > 0xFFFF;
+        timer.emu_cycles(1);
+    }
+
+    // --- ADD A, imm8 ---
+    else {
+        sum = a + fetched_data;
+
+        z = ((sum & 0xFF) == 0);
+        h = ((a & 0x0F) + (fetched_data & 0x0F)) > 0x0F;
+        c = sum > 0xFF;
+    }
+
+    regs.set_reg(curr_ins->reg_1, sum & 0xFFFF);
     cpu_set_flags(z, 0, h, c);
 }
+
 // --- Main Execute Function ---
 void gbCpu::execute() {
     switch (curr_ins->type) {

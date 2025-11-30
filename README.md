@@ -1,11 +1,11 @@
-# 🎮 ZenBoy – Game Boy Emulator
+# ZenBoy – Game Boy Emulator
 
 ZenBoy is a work-in-progress **Game Boy emulator** written in **C++17**.  
 It currently supports CPU, memory, timers, and instruction set emulation, with plans to add GPU and audio support in the future.  
 
 ---
 
-## ✨ Features
+## Features
 - CPU instruction set emulation (8-bit Game Boy Z80-like CPU).
 - Memory management with cartridge loading.
 - Timer and interrupt handling.
@@ -14,7 +14,7 @@ It currently supports CPU, memory, timers, and instruction set emulation, with p
 
 ---
 
-## 📦 Build Instructions
+## Build Instructions
 
 ### Prerequisites
 - **CMake ≥ 3.10**

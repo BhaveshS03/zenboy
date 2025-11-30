@@ -97,7 +97,7 @@ bool gbCpu::step() {
     if (!halted) {
         mem_dest = 0;
         is_mem_dest = false;
-        debug();
+        // debug();
         fetch();
         decode();
         dbg_update();

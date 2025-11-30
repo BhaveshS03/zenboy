@@ -44,7 +44,7 @@ void Bus::io_write(u16 address, u8 value) {
         return;
     }
 
-    if (0xFF04 >= address && address <= 0xFF07) {
+    if (address >= 0xFF04 && address <= 0xFF07)  {
         tmr->timer_write(address, value);
         return;
     }

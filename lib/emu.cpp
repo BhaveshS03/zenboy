@@ -8,15 +8,17 @@
 #include "../headers/instructions.hpp"
 
 int Emulator::run_emu(bool debug){
-    Timer timer = Timer();        // Create Timer
+    Timer timer;
     Cart cart;
-    cart.read_rom("../../roms/04-op r,imm.gb");
+    cart.read_rom("../../roms/02-interrupts.gb");
 
     Bus bus = Bus(cart, &timer, nullptr);    // Create Bus
     Instructions instr = Instructions();     // Create Instructions
 
     gbCpu cpu(bus, instr, timer); // Pass pointers
+    timer.set_cpu(&cpu);
     bus.set_cpu(&cpu);
+
     int i=0;
     while(true){
         if (!cpu.step()) {

@@ -29,14 +29,14 @@ cmake -B build -S .
 cmake --build build --config Release
 ```
 
-The resulting executable will be placed in `build/bin/` as `zgboy` (or `zgboy.exe` on Windows).
+The resulting executable will be placed in `build/bin/` as `zenboy` (or `zenboy.exe` on Windows).
 
 ## Usage
 
 Simply run the compiled executable from your terminal passing the absolute or relative path to the `.gb` or `.gbc` ROM.
 
 ```bash
-./build/bin/zgboy path/to/rom.gb
+./build/bin/zenboy path/to/rom.gb
 ```
 
 ## Controls

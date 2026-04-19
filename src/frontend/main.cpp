@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     }
 
     SDL_Window* window = SDL_CreateWindow(
-        "zgboy",
+        "zenboy",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         160 * 4, 144 * 4,
         SDL_WINDOW_RESIZABLE

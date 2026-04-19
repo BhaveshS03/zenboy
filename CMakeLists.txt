@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(zgboy VERSION 0.1.0 LANGUAGES CXX)
+project(zenboy VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,16 +31,16 @@ set(ALL_SOURCES
     ${FRONTEND_SOURCES}
 )
 
-add_executable(zgboy ${ALL_SOURCES})
+add_executable(zenboy ${ALL_SOURCES})
 
-target_include_directories(zgboy PRIVATE
+target_include_directories(zenboy PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-target_link_libraries(zgboy PRIVATE SDL2::SDL2main SDL2::SDL2-static)
+target_link_libraries(zenboy PRIVATE SDL2::SDL2main SDL2::SDL2-static)
 
 if(MSVC)
-    target_compile_options(zgboy PRIVATE /W4 /O2)
+    target_compile_options(zenboy PRIVATE /W4 /O2)
 else()
-    target_compile_options(zgboy PRIVATE -Wall -Wextra -O2)
+    target_compile_options(zenboy PRIVATE -Wall -Wextra -O2)
 endif()

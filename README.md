@@ -1,4 +1,4 @@
-# zgboy
+# zenboy
 
 A Game Boy/Game Boy Color emulator written from scratch in C++20 and SDL2. It is built to simulate accurate hardware mechanics, timing synchronizations, and Game Boy memory mappings.
 

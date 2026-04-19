@@ -2,13 +2,15 @@
 
 A Game Boy/Game Boy Color emulator written from scratch in C++20 and SDL2. It is built to simulate accurate hardware mechanics, timing synchronizations, and Game Boy memory mappings.
 
+<img width="400" height="380" alt="{B0F28E83-1E9D-49D5-B702-6F37C97432D0}" src="https://github.com/user-attachments/assets/bb7a24af-945d-4c13-a8d9-ba6435f8b9ce" />
+
+
 ## Features
 
 - **Cycle and Dot Accurate Timing:** Coordinates components leveraging simulated T-Cycles logic.
 - **Graphic Modes:** Handles Backgrounds, Windows, and Objects across DMG mapping configurations.
 - **OAM Space DMA:** Mimics Direct Memory Access correctly rendering and suspending hardware bus accesses.
 - **Mappers (MBC):** Support for `MBC1`, `MBC2`, `MBC3` (RTC stubbed), and `MBC5`, alongside `ROM ONLY` configurations.
-
 - **SRAM Persistence:** In-game saves are supported. `.sav` files are dumped exactly next to your `.gb` rom upon exiting. 
 
 ## Build Requirements
